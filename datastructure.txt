@@ -1,0 +1,7 @@
+-Votes
+  -_id - mongo ID
+  -option - mongo ID of option
+
+-options
+  -_id
+  -colour - array, [r, g, b]
