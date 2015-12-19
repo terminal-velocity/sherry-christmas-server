@@ -69,16 +69,28 @@
     </div>
 
     <script>
-      google.load("visualization", "1.1", {packages:["bar"]});
+      var votingdata = [];
+      google.load("visualization", "1.1", {packages:["corechart"]});
       google.setOnLoadCallback(drawChart);
       function drawChart() {
+/*
         var data = google.visualization.arrayToDataTable([
-          ['Vote option', 'Number of Votes'],
-          ['1', 21],
-          ['2', 21],
-          ['3', 43],
-          ['4', 2]
+          ['Vote option', 'Number of Votes', {role: "style"}],
+          ['1', 21, "black"],
+          ['2', 21, "yellow"],
+          ['3', 43, "red"],
+          ['4', 2, "purple"]
         ]);
+*/
+        var data = new google.visualization.DataTable();
+        data.addColumn("string", "Vote Option");
+        data.addColumn("number", "Number of votes");
+        data.addColumn({type: "string", role: "style"});
+
+        $.each(votingdata, function(i, option){
+          var colour = "color: rgb(" + option.colour.join(",") + ");";
+          data.addRow([option.name, option.votes, colour]);
+        });
 
         var options = {
           chart: {
@@ -87,7 +99,7 @@
           },
           legend: {position: 'none'}
         };
-        var chart = new google.charts.Bar(document.getElementById('columnchart_material'));
+        var chart = new google.visualization.ColumnChart(document.getElementById('columnchart_material'));
         chart.draw(data, options);
       }
 
@@ -95,7 +107,8 @@
 
       var socket = io.connect();
       socket.on("data", function(data){
-        alert(JSON.stringify(data));
+        votingdata = data;
+        drawChart();
       });
 
       $.get("/options", function(options){
