@@ -3,6 +3,7 @@
 		<title>Sherry Christmas Client</title>
 		<link rel="stylesheet" type="text/css" href="styles.css">
 		<link href="http://db.onlinewebfonts.com/c/45c8f047f17ead2bc5013f3ae80f7410?family=Kingthings+Christmas" rel="stylesheet" type="text/css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
@@ -49,9 +50,16 @@
       <div class="header">
   			<h1>Sherry Christmas!</h1>
   		</div>
-  		<div class="vote_button" data-id="1">
-  			Placeholder Text
-  		</div>
+      <script type="text/x-handlebars-template" id="template-buttons">
+      {{#each options}}
+          <div class="vote_button" data-id="{{this._id}}">
+            {{this.name}}
+          </div>
+        {{/each}}
+      </script>
+      <div id="buttons">
+
+      </div>
     </div>
     <div id="results">
       <div class="header">
@@ -88,6 +96,20 @@
       var socket = io.connect();
       socket.on("data", function(data){
         alert(JSON.stringify(data));
+      });
+
+      $.get("/options", function(options){
+        console.log(options);
+        var template = $("#template-buttons").html();
+        template = Handlebars.compile(template);
+        $("#buttons").html(template({
+          options: options
+        }));
+        $("#buttons>.vote_button").click(function(){
+          $.get("/vote/" + $(this).data("id"), function(){
+            alert("Voted");
+          });
+        });
       });
     </script>
 	</body>
