@@ -29,14 +29,38 @@ app.delete("/options/:id", function(req, res){
 
 app.get("/vote/:id", function(req, res){
   db.options.update({_id: db.ObjectId(req.params.id)}, {$inc: {votes: 1}});
+  db.votes.insert({
+    time: new Date().getTime(),
+    option: db.ObjectId(req.params.id)
+  });
   db.options.find({}, function(err, items){
     io.emit("data", items);
+    var data = "";
     items.forEach(function(item, itemid){
       item.colour.push("");
       for(var i = 0; i < item.votes; i++){
-        mqttclient.publish("led/" + (itemid + i), item.colour.join(","));
+          data += item.colour.join(",");
       }
     });
+    mqttclient.publish("led", data);
   });
   res.sendStatus(200);
 });
+
+function sendvotestotree(){
+  db.options.find({}, function(err, optionsdata){
+    db.votes.find({}, function(err, votes){
+      var options = {};
+      optionsdata.forEach(function(option){
+        options[option._id.toString()] = option;
+      });
+      var votecolours = [];
+      votes.forEach(function(vote){
+        votecolours.push(options[vote.option.toString()].colour);
+      });
+      console.log(votecolours);
+    });
+  });
+}
+
+sendvotestotree();
