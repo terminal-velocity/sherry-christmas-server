@@ -10,8 +10,6 @@ var app = express();
 var server = app.listen(9001);
 var io = require("socket.io").listen(server);
 
-var ledchange = false;
-
 mqttclient.publish("test", "hello world");
 
 app.get("/", function(req, res){
@@ -31,23 +29,23 @@ app.delete("/options/:id", function(req, res){
 });
 
 app.get("/vote/:id", function(req, res){
-  db.options.update({_id: db.ObjectId(req.params.id)}, {$inc: {votes: 1}});
-  db.votes.insert({
-    time: new Date().getTime(),
-    option: db.ObjectId(req.params.id)
-  }, function(){
-    db.options.find({}, function(err, items){
-      io.emit("data", items);
+  db.options.update({_id: db.ObjectId(req.params.id)}, {$inc: {votes: 1}}, function(){
+    db.votes.insert({
+      time: new Date().getTime(),
+      option: db.ObjectId(req.params.id)
     }, function(){
-      ledchange = true;
-      res.sendStatus(200);
+      db.options.find({}, function(err, items){
+        io.emit("data", items);
+        sendvotestotree();
+        res.sendStatus(200);
+      });
     });
   });
 });
 
 function sendvotestotree(){
   db.options.find({}, function(err, optionsdata){
-    db.votes.find({}, function(err, votes){
+    db.votes.find().sort({time: 1}, function(err, votes){
       var options = {};
       optionsdata.forEach(function(option){
         options[option._id.toString()] = option;
@@ -56,11 +54,11 @@ function sendvotestotree(){
       votes.forEach(function(vote){
         votecolours.push(options[vote.option.toString()].colour);
       });
-      var smoothfunction = smooth(votecolours, {scaleTo: 50, method: "linear"});
+      var smoothfunction = smooth(votecolours, {scaleTo: 49, method: "linear"});
       var leds = [];
       for(var i = 0; i < 50; i++){
         var data = smoothfunction(i);
-        leds.push(Math.round(data[0]), Math.round(data[1]), Math.round(data[2]));
+        leds.push(Math.round(data[0]), Math.round(data[1] * 0.6), Math.round(data[2] * 0.75));
       }
       var ledvalues = [];
       leds.forEach(function(led){
@@ -70,10 +68,3 @@ function sendvotestotree(){
     });
   });
 }
-
-setInterval(function(){
-  if(ledchange){
-    ledchange = false;
-    sendvotestotree();
-  }
-}, 1000);
