@@ -1,0 +1,24 @@
+{
+  "name": "sherry-christmas-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://TimStallard@github.com/terminal-velocity/sherry-christmas-server.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/terminal-velocity/sherry-christmas-server/issues"
+  },
+  "homepage": "https://github.com/terminal-velocity/sherry-christmas-server#readme",
+  "dependencies": {
+    "express": "^4.13.3",
+    "handlebars": "^4.0.5",
+    "mongojs": "^2.2.2"
+  }
+}
