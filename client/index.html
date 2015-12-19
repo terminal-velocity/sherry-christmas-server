@@ -1,14 +1,94 @@
 <html>
-  <head>
+	<head>
+		<title>Sherry Christmas Client</title>
+		<link rel="stylesheet" type="text/css" href="styles.css">
+		<link href="http://db.onlinewebfonts.com/c/45c8f047f17ead2bc5013f3ae80f7410?family=Kingthings+Christmas" rel="stylesheet" type="text/css"/>
     <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-  </head>
-  <body>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Lora|Lobster+Two);
+
+      h1 {
+      font-family: 'Lobster Two', sans-serif;
+      text-align: center;
+      color: #fff;
+      font-size: 250%;
+      }
+
+      .header {
+      max-width: 2000px;
+      width: 100%;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      background: #C40000;
+      border: 2px solid #ccc;
+      width: 100%;
+      margin: 0px auto;
+      }
+
+      div {
+      position: relative;
+      }
+
+      .vote_button {
+      margin: 0 auto ;
+      font-family: 'Lora', sans-serif;
+      text-align: center;
+      width: 90%;
+      max-width: 500px;
+      padding-top: 25px;
+      padding-bottom: 25px;
+      background-color: #000;
+      color: #fff;
+      }
+    </style>
+	</head>
+	<body>
+    <div id="vote">
+      <div class="header">
+  			<h1>Sherry Christmas!</h1>
+  		</div>
+  		<div class="vote_button" data-id="1">
+  			Placeholder Text
+  		</div>
+    </div>
+    <div id="results">
+      <div class="header">
+          <h1>Sherry Christmas!</h1>
+      </div>
+      <div id="columnchart_material" style="width: 100%; height: calc(100% - 128px); min-height: 300px;"></div>
+    </div>
+
     <script>
+      google.load("visualization", "1.1", {packages:["bar"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Vote option', 'Number of Votes'],
+          ['1', 21],
+          ['2', 21],
+          ['3', 43],
+          ['4', 2]
+        ]);
+
+        var options = {
+          chart: {
+            title: 'Poll question title',
+            subtitle: 'Poll subtitle placeholder',
+          },
+          legend: {position: 'none'}
+        };
+        var chart = new google.charts.Bar(document.getElementById('columnchart_material'));
+        chart.draw(data, options);
+      }
+
+      $(window).resize(drawChart);
+
       var socket = io.connect();
       socket.on("data", function(data){
-        console.log(data);
+        alert(JSON.stringify(data));
       });
     </script>
-  </body>
+	</body>
 </html>
