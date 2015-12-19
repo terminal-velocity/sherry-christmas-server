@@ -2,12 +2,15 @@ var express = require("express");
 var mongojs = require("mongojs");
 var db = mongojs("192.168.3.97/sherry", ["options", "votes"]);
 var mqtt = require("mqtt");
+var smooth = require("./smooth.js");
 
 var mqttclient = mqtt.connect("mqtt://192.168.3.97");
 
 var app = express();
 var server = app.listen(9001);
 var io = require("socket.io").listen(server);
+
+var ledchange = false;
 
 mqttclient.publish("test", "hello world");
 
@@ -32,19 +35,14 @@ app.get("/vote/:id", function(req, res){
   db.votes.insert({
     time: new Date().getTime(),
     option: db.ObjectId(req.params.id)
-  });
-  db.options.find({}, function(err, items){
-    io.emit("data", items);
-    var data = "";
-    items.forEach(function(item, itemid){
-      item.colour.push("");
-      for(var i = 0; i < item.votes; i++){
-          data += item.colour.join(",");
-      }
+  }, function(){
+    db.options.find({}, function(err, items){
+      io.emit("data", items);
+    }, function(){
+      ledchange = true;
+      res.sendStatus(200);
     });
-    mqttclient.publish("led", data);
   });
-  res.sendStatus(200);
 });
 
 function sendvotestotree(){
@@ -58,9 +56,24 @@ function sendvotestotree(){
       votes.forEach(function(vote){
         votecolours.push(options[vote.option.toString()].colour);
       });
-      console.log(votecolours);
+      var smoothfunction = smooth(votecolours, {scaleTo: 50, method: "linear"});
+      var leds = [];
+      for(var i = 0; i < 50; i++){
+        var data = smoothfunction(i);
+        leds.push(Math.round(data[0]), Math.round(data[1]), Math.round(data[2]));
+      }
+      var ledvalues = [];
+      leds.forEach(function(led){
+        ledvalues.push(led);
+      });
+      mqttclient.publish("led", ledvalues.join(",") + ",");
     });
   });
 }
 
-sendvotestotree();
+setInterval(function(){
+  if(ledchange){
+    ledchange = false;
+    sendvotestotree();
+  }
+}, 1000);
