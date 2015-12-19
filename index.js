@@ -1,9 +1,9 @@
 var express = require("express");
 var mongojs = require("mongojs");
-var db = mongojs("sherry", ["options", "votes"]);
+var db = mongojs("192.168.3.97/sherry", ["options", "votes"]);
 var mqtt = require("mqtt");
 
-var mqttclient = mqtt.connect("mqtt://localhost");
+var mqttclient = mqtt.connect("mqtt://192.168.3.97");
 
 var app = express();
 var server = app.listen(9001);
