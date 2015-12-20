@@ -1,26 +1,39 @@
 var express = require("express");
 var mongojs = require("mongojs");
-var db = mongojs("192.168.3.97/sherry", ["options", "votes", "question"]);
+var db = mongojs(process.env.db, ["options", "votes", "question"]);
 var mqtt = require("mqtt");
 var smooth = require("./smooth.js");
 var bodyparser = require("body-parser");
+var basicauth = require("basic-auth");
 
-var mqttclient = mqtt.connect("mqtt://192.168.3.97");
+var mqttclient = mqtt.connect(process.env.mqtt);
 
 var app = express();
-var server = app.listen(9001);
+var server = app.listen(process.env.port || 9001);
 var io = require("socket.io").listen(server);
+
+var auth = function(req, res, next){
+  var credentials = basicauth(req);
+  if(!credentials || credentials.name != process.env.username || credentials.pass != process.env.passwd){
+    res.statusCode = 401;
+    res.setHeader("WWW-Authenticate", "Basic realm='Admin system login'");
+    res.end("Access denied.");
+  }
+  else{
+    next();
+  }
+}
 
 app.use(bodyparser.urlencoded({ extended: true }));
 app.use(bodyparser.json());
 
-mqttclient.publish("test", "hello world");
+mqttclient.publish("connected", "Server online.");
 
 app.get("/", function(req, res){
   res.sendFile(__dirname + "/client/index.html");
 });
 
-app.get("/admin", function(req, res){
+app.get("/admin", auth, function(req, res){
   res.sendFile(__dirname + "/client/admin.html");
 });
 
@@ -30,7 +43,7 @@ app.route("/options")
       res.json(items);
     });
   })
-  .post(function(req, res){
+  .post(auth, function(req, res){
     var colour = [parseInt(req.body.colour[0]), parseInt(req.body.colour[1]), parseInt(req.body.colour[2])]
     db.options.insert({
       name: req.body.name,
@@ -40,7 +53,7 @@ app.route("/options")
     });
   });
 
-app.delete("/options/:id", function(req, res){
+app.delete("/options/:id", auth, function(req, res){
   db.options.remove({_id: db.ObjectId(req.params.id)}, function(){
     res.sendStatus(200);
   });
@@ -57,7 +70,7 @@ app.route("/question")
       }
     });
   })
-  .post(function(req, res){
+  .post(auth, function(req, res){
     db.question.update({}, {
       $set: {
         question: req.body.question
