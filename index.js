@@ -82,6 +82,18 @@ app.route("/question")
     });
   });
 
+app.delete("/votes", auth, function(req, res){
+  db.votes.remove({}, function(){
+    db.options.update({}, {
+      $set: {
+        votes: 0
+      }
+    }, function(){
+      res.sendStatus(200);
+    });
+  });
+});
+
 app.get("/vote/:id", function(req, res){
   db.options.update({_id: db.ObjectId(req.params.id)}, {$inc: {votes: 1}}, function(){
     db.votes.insert({
