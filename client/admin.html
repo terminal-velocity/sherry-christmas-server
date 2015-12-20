@@ -48,7 +48,8 @@
       }
 
       .inputitem{
-        padding: 10px;
+        padding-top: 10px;
+        padding-bottom: 10px;
         border: 1px solid grey;
         display: block;
       }
@@ -92,6 +93,7 @@
 		<div id="header">Sherry Christmas!</div>
 	  <h2 id="subtitle">Admin</h2>
     <div id="adminbox">
+      <a id="clearvotes" class="inputitem" style="text-align: center; color: white; text-decoration: none; background-color: red;" href="javascript: void(0);">Clear all votes</a>
       <form id="question"><div class="inputbox"><input type="text" class="" name="question" placeholder="Question"></input><input type="submit" value="&#9745;"></input></div></form>
       <script id="template-options" type="text/x-handlebars-template">
         {{#each options}}
@@ -164,6 +166,16 @@
             });
           });
         });
+      });
+
+      $("#clearvotes").click(function(){
+        $.ajax({
+          url: "/votes",
+          method: "DELETE",
+          success: function(){
+            alert("All votes have been cleared.");
+          }
+        })
       });
 		</script>
 	</body>

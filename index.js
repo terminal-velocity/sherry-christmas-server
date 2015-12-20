@@ -93,6 +93,7 @@ app.delete("/votes", auth, function(req, res){
         votes: 0
       }
     }, function(){
+      ledchange = true;
       res.sendStatus(200);
     });
   });
@@ -129,7 +130,12 @@ function sendvotestotree(){
       }
       else{
         var smoothfunction = function(){
-          return votecolours[0];
+          if(votecolours[0]){
+            return votecolours[0];
+          }
+          else{
+            return [0, 0, 0];
+          }
         }
       }
       var leds = [];
