@@ -120,7 +120,14 @@ function sendvotestotree(){
       votes.forEach(function(vote){
         votecolours.push(options[vote.option.toString()].colour);
       });
-      var smoothfunction = smooth(votecolours, {scaleTo: 49, method: "linear"});
+      if(votecolours.length > 1){
+        var smoothfunction = smooth(votecolours, {scaleTo: 49, method: "linear"});
+      }
+      else{
+        var smoothfunction = function(){
+          return votecolours[0];
+        }
+      }
       var leds = [];
       for(var i = 0; i < 50; i++){
         var data = smoothfunction(i);
