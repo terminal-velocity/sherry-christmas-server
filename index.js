@@ -12,6 +12,8 @@ var app = express();
 var server = app.listen(process.env.port || 9001);
 var io = require("socket.io").listen(server);
 
+var ledchange = false;
+
 var auth = function(req, res, next){
   var credentials = basicauth(req);
   if(!credentials || credentials.name != process.env.username || credentials.pass != process.env.passwd){
@@ -104,7 +106,7 @@ app.get("/vote/:id", function(req, res){
     }, function(){
       db.options.find({}, function(err, items){
         io.emit("data", items);
-        sendvotestotree();
+        ledchange = true;
         res.sendStatus(200);
       });
     });
@@ -143,3 +145,10 @@ function sendvotestotree(){
     });
   });
 }
+
+setInterval(function(){
+  if(ledchange){
+    ledchange = true;
+    sendvotestotree();
+  }
+}, 1000)
