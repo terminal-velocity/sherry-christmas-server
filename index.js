@@ -92,11 +92,11 @@ app.delete("/votes", auth, function(req, res){
       $set: {
         votes: 0
       }
+    }, {
+      multi: true
     }, function(){
       ledchange = true;
       res.sendStatus(200);
-    }, {
-      multi: true
     });
   });
 });
