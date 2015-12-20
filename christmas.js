@@ -1,5 +1,5 @@
 var mqtt = require("mqtt");
-var mqttclient = mqtt.connect("mqtt://localhost");
+var mqttclient = mqtt.connect("mqtt://sherrythetree.com");
 
 function red(){
   mqttclient.publish("led", "255,0,0,0,255,0,".repeat(25));
