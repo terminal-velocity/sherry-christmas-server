@@ -31,7 +31,7 @@
         text-align: center;
       }
 
-      #results{
+      #results, #vote{
         display: none;
       }
 
@@ -107,29 +107,53 @@
 
       var socket = io.connect();
       socket.on("data", function(data){
+        $("#results h1").slideUp();
         votingdata = data;
         drawChart();
       });
 
-      $.get("/question", function(question){
-        $.get("/options", function(options){
-          var template = $("#template-buttons").html();
-          template = Handlebars.compile(template);
-          $("#vote").html(template({
-            options: options,
-            question: question
-          }));
-          $("#buttons>.vote_button").click(function(){
-            $.get("/vote/" + $(this).data("id"), function(){
-              $("#vote").fadeOut(function(){
-                $("#results").css({opacity: 0}).show();
-                drawChart();
-                $("#results").css({display: "none", opacity: 1}).fadeIn();
+      if(window.localStorage.votetime){
+        var lastvote = parseInt(window.localStorage.votetime);
+        if(lastvote > (new Date().getTime() - 180000)){
+          //last vote was too recent
+          $("#results").html("<h1 style='text-align: center'>You've voted before, but wait a few seconds and you'll see the results again.</h1>" + $("#results").html());
+          $("#results").fadeIn();
+        }
+        else{
+          loadvote();
+        }
+      }
+      else{
+        loadvote();
+      }
+
+      function loadvote(){
+        $.get("/question", function(question){
+          $.get("/options", function(options){
+            var template = $("#template-buttons").html();
+            template = Handlebars.compile(template);
+            $("#vote").html(template({
+              options: options,
+              question: question
+            }));
+            $("#vote").fadeIn();
+            $("#buttons>.vote_button").click(function(){
+              $.get("/vote/" + $(this).data("id"), function(){
+                window.localStorage.votetime = new Date().getTime().toString();
+                $("#vote").fadeOut(function(){
+                  switchtochart();
+                });
               });
             });
           });
         });
-      });
+      }
+
+      function switchtochart(){
+        $("#results").css({opacity: 0}).show();
+        drawChart();
+        $("#results").css({display: "none", opacity: 1}).fadeIn();
+      }
     </script>
 	</body>
 </html>
