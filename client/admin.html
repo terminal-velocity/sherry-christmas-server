@@ -1,0 +1,170 @@
+<html>
+	<head>
+		<title>Sherry Christmas Client</title>
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css"></link>
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Open+Sans|Lobster+Two);
+
+      body{
+        margin: 0;
+        font-family: Open Sans, sans-serif;
+      }
+
+      #header{
+        width: 100%;
+        text-align: center;
+        font-size: 3.5em;
+        font-family: 'Lobster Two', sans-serif;
+	      font-weight: 700;
+        background-color: red;
+        color: white;
+        padding-top: 0.5em;
+        padding-bottom: 0.5em;
+        margin-bottom: 30px;
+      }
+
+      #subtitle{
+        text-align: center;
+      }
+
+      #adminbox{
+        width: 80%;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .inputitem, .inputbox{
+        font-size: 1.2em;
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+        border-radius: 5px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+      }
+
+      .inputitem{
+        padding: 10px;
+        border: 1px solid grey;
+        display: block;
+      }
+
+      .inputbox{
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+      }
+
+      .inputbox>*{
+        flex-grow: 1;
+        font-size: 1.2em;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        border: 1px solid grey;
+      }
+
+      .inputbox>*:first-child{
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+      }
+
+      .inputbox>*:first-child{
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+      }
+
+      .inputbox>*:last-child{
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+      }
+
+      .option{
+        text-align: center;
+        color: white;
+      }
+    </style>
+	</head>
+	<body>
+		<div id="header">Sherry Christmas!</div>
+	  <h2 id="subtitle">Admin</h2>
+    <div id="adminbox">
+      <form id="question"><div class="inputbox"><input type="text" class="" name="question" placeholder="Question"></input><input type="submit" value="&#9745;"></input></div></form>
+      <script id="template-options" type="text/x-handlebars-template">
+        {{#each options}}
+          <div class="inputbox"><input type="text" class="option" value="{{this.name}}" style="background-color: rgb({{this.colour}});" disabled="true"></input><input type="button" value="x" class="deletebutton" data-id="{{this._id}}"></input></div>
+        {{/each}}
+      </script>
+      <div id="options"></div>
+      <form id="newitem"><div class="inputbox"><input type="text" name="name" placeholder="New item name..." style="background-color: rgb({{this.colour}});"></input><input name="colourpicker"></input><input type="submit" value="+"></input></div></form>
+    </div>
+
+		<script>
+      $("input[name='colourpicker']").spectrum({
+        color: "black"
+      });
+
+      $.get("/question", function(question){
+        $("input[name='question']").val(question);
+      });
+
+      function loadoptions(callback){
+        $.get("/options", function(options){
+          var template = Handlebars.compile($("#template-options").html());
+          $("#options").html(template({
+            options: options
+          }));
+
+          $(".deletebutton").click(function(){
+            var id = $(this).data("id");
+            $("#options").slideUp(function(){
+              $.ajax({
+                url: "/options/" + id,
+                type: "DELETE",
+                success: function(){
+                  loadoptions(function(){
+                    $("#options").slideDown();
+                  });
+                }
+              });
+            });
+          });
+
+          if(callback){
+            callback();
+          }
+        });
+      }
+
+      loadoptions();
+
+      $("#question").submit(function(e){
+        e.preventDefault();
+        $.post("/question", {
+          question: $("input[name='question']").val()
+        }, function(){
+          alert("Updates saved");
+        });
+      });
+
+      $("#newitem").submit(function(e){
+        e.preventDefault();
+        var colour = $("input[name='colourpicker']").spectrum("get").toRgb();
+        $.post("/options", {
+          colour: [colour.r, colour.g, colour.b],
+          name: $("input[name='name']").val()
+        }, function(){
+          $("#options").slideUp(function(){
+            loadoptions(function(){
+              $("#options").slideDown();
+              $("#newitem input[type='text']").val("");
+            });
+          });
+        });
+      });
+		</script>
+	</body>
+</html>

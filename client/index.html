@@ -1,71 +1,77 @@
 <html>
 	<head>
 		<title>Sherry Christmas Client</title>
-		<link rel="stylesheet" type="text/css" href="styles.css">
 		<link href="http://db.onlinewebfonts.com/c/45c8f047f17ead2bc5013f3ae80f7410?family=Kingthings+Christmas" rel="stylesheet" type="text/css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-      @import url(https://fonts.googleapis.com/css?family=Lora|Lobster+Two);
+      @import url(https://fonts.googleapis.com/css?family=Open+Sans|Lobster+Two);
 
-      h1 {
-      font-family: 'Lobster Two', sans-serif;
-      text-align: center;
-      color: #fff;
-      font-size: 250%;
+      body{
+        margin: 0;
+        font-family: Open Sans;
       }
 
-      .header {
-      max-width: 2000px;
-      width: 100%;
-      padding-top: 10px;
-      padding-bottom: 10px;
-      background: #C40000;
-      border: 2px solid #ccc;
-      width: 100%;
-      margin: 0px auto;
+      #header{
+        width: 100%;
+        text-align: center;
+        font-size: 3.5em;
+        font-family: 'Lobster Two', sans-serif;
+	      font-weight: 700;
+        background-color: red;
+        color: white;
+        padding-top: 0.5em;
+        padding-bottom: 0.5em;
       }
 
-      div {
-      position: relative;
+      #vote>h1{
+        text-align: center;
       }
 
-      .vote_button {
-      margin: 0 auto ;
-      font-family: 'Lora', sans-serif;
-      text-align: center;
-      width: 90%;
-      max-width: 500px;
-      padding-top: 25px;
-      padding-bottom: 25px;
-      background-color: #000;
-      color: #fff;
+      #results{
+        display: none;
+      }
+
+      #buttons{
+        display: flex;
+        flex-direction: row;
+        width: 80%;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+        flex-wrap: wrap;
+      }
+
+      #buttons>.vote_button{
+        min-width: 300px;
+        flex-grow: 1;
+        padding: 20px;
+        margin: 10px;
+        border-radius: 10px;
+        color: white;
+        text-align: center;
       }
     </style>
 	</head>
 	<body>
+    <div id="header">Sherry Christmas!</div>
     <div id="vote">
-      <div class="header">
-  			<h1>Sherry Christmas!</h1>
-  		</div>
       <script type="text/x-handlebars-template" id="template-buttons">
-      {{#each options}}
-          <div class="vote_button" data-id="{{this._id}}">
-            {{this.name}}
-          </div>
-        {{/each}}
+        <h1>{{question}}</h1>
+        <div id="buttons">
+          {{#each options}}
+            <div class="vote_button" data-id="{{this._id}}" style="background-color: rgb({{this.colour}})">
+              {{this.name}}
+            </div>
+          {{/each}}
+        </div>
       </script>
-      <div id="buttons">
-
-      </div>
     </div>
     <div id="results">
-      <div class="header">
-          <h1>Sherry Christmas!</h1>
-      </div>
-      <div id="columnchart_material" style="width: 100%; height: calc(100% - 128px); min-height: 300px;"></div>
+      <div id="chart" style="width: 100%; height: calc(100% - 128px); min-height: 300px;"></div>
     </div>
 
     <script>
@@ -73,15 +79,6 @@
       google.load("visualization", "1.1", {packages:["corechart"]});
       google.setOnLoadCallback(drawChart);
       function drawChart() {
-/*
-        var data = google.visualization.arrayToDataTable([
-          ['Vote option', 'Number of Votes', {role: "style"}],
-          ['1', 21, "black"],
-          ['2', 21, "yellow"],
-          ['3', 43, "red"],
-          ['4', 2, "purple"]
-        ]);
-*/
         var data = new google.visualization.DataTable();
         data.addColumn("string", "Vote Option");
         data.addColumn("number", "Number of votes");
@@ -97,9 +94,12 @@
             title: 'Poll question title',
             subtitle: 'Poll subtitle placeholder',
           },
-          legend: {position: 'none'}
+          legend: {position: 'none'},
+          vAxis: {
+            minValue: 0
+          }
         };
-        var chart = new google.visualization.ColumnChart(document.getElementById('columnchart_material'));
+        var chart = new google.visualization.ColumnChart($("#chart")[0]);
         chart.draw(data, options);
       }
 
@@ -111,16 +111,22 @@
         drawChart();
       });
 
-      $.get("/options", function(options){
-        console.log(options);
-        var template = $("#template-buttons").html();
-        template = Handlebars.compile(template);
-        $("#buttons").html(template({
-          options: options
-        }));
-        $("#buttons>.vote_button").click(function(){
-          $.get("/vote/" + $(this).data("id"), function(){
-            alert("Voted");
+      $.get("/question", function(question){
+        $.get("/options", function(options){
+          var template = $("#template-buttons").html();
+          template = Handlebars.compile(template);
+          $("#vote").html(template({
+            options: options,
+            question: question
+          }));
+          $("#buttons>.vote_button").click(function(){
+            $.get("/vote/" + $(this).data("id"), function(){
+              $("#vote").fadeOut(function(){
+                $("#results").css({opacity: 0}).show();
+                drawChart();
+                $("#results").css({display: "none", opacity: 1}).fadeIn();
+              });
+            });
           });
         });
       });
