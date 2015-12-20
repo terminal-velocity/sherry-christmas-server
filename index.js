@@ -55,7 +55,9 @@ app.route("/options")
 
 app.delete("/options/:id", auth, function(req, res){
   db.options.remove({_id: db.ObjectId(req.params.id)}, function(){
-    res.sendStatus(200);
+    db.votes.remove({option: db.ObjectId(req.params.id)}, function(){
+      res.sendStatus(200);
+    });
   });
 });
 
