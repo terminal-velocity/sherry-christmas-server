@@ -95,6 +95,8 @@ app.delete("/votes", auth, function(req, res){
     }, function(){
       ledchange = true;
       res.sendStatus(200);
+    }, {
+      multi: true;
     });
   });
 });
