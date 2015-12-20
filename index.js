@@ -66,7 +66,9 @@ app.route("/question")
         res.send(questions[0].question);
       }
       else{
-        res.send("");
+        db.question.insert({question: ""}, function(){
+          res.send("");
+        });
       }
     });
   })
